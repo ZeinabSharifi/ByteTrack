@@ -278,7 +278,7 @@ class BYTETracker(object):
 
         ###------------------------------edit------------------------------_###
         #######################################################################
-        detections = [detections[i] for i in u_detection if detections[i].score>0.7]
+        detections = [detections[i] for i in u_detection if detections[i].score]
         boxes = [track.tlbr for track in detections]
         crops = [crop_box(box=box, frame=frame) for box in boxes]
         detected_features = self.extractor(crops)
