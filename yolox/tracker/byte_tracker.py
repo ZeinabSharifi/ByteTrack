@@ -293,11 +293,12 @@ class BYTETracker(object):
             track = high_removed_stracks[i_rem]
             track[i_rem].re_activate(det,self.frame_id,new_id=False)
             refind_stracks.append(track)
+        
+        print("REFINDS:",len(refind_stracks))
         #######################################################################
         ###------------------------------edit------------------------------_###
         """ Step 4: Init new stracks"""
         for inew in u_detection:
-            print("HI")
             track = detections[inew]
             feature = detected_features[inew]  ###<----- edit
             if track.score < self.det_thresh:
@@ -305,6 +306,7 @@ class BYTETracker(object):
             track.activate(self.kalman_filter, self.frame_id, feature) ###<----- passed in feature as well
             activated_starcks.append(track)
             self.global_stracks.append(track)
+        print("ACTIVATED:",activated_starcks)
         """ Step 5: Update state"""
         for track in self.lost_stracks:
             if self.frame_id - track.end_frame > self.max_time_lost:
