@@ -287,7 +287,7 @@ class BYTETracker(object):
         removed_features = [track.feature for track in high_removed_stracks]
         similarity_matrix = compare_features(removed_features,detected_features)
         matched, u_removed, u_detection = filter_matches(similarity_matrix=similarity_matrix)
-        print("similarity_matrix:",similarity_matrix)
+        print("u_detection length:",len(u_detection))
         for i_rem, i_det in matched:
             det = detections[i_det]
             track = high_removed_stracks[i_rem]
