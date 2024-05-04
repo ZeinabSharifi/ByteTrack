@@ -1,6 +1,7 @@
 import numpy as np
 from collections import deque
 import os
+import cv2
 import os.path as osp
 import copy
 import torch
@@ -19,7 +20,7 @@ class STrack(BaseTrack):
         self.kalman_filter = None
         self.mean, self.covariance = None, None
         self.is_activated = False
-
+       
         self.score = score
         self.tracklet_len = 0
 
@@ -47,7 +48,7 @@ class STrack(BaseTrack):
         self.kalman_filter = kalman_filter
         self.track_id = self.next_id()
         self.mean, self.covariance = self.kalman_filter.initiate(self.tlwh_to_xyah(self._tlwh))
-
+        
         self.tracklet_len = 0
         self.state = TrackState.Tracked
         if frame_id == 1:
@@ -143,11 +144,11 @@ class STrack(BaseTrack):
 
 
 class BYTETracker(object):
-    def __init__(self, args, frame_rate=30):
+    def __init__(self, args, frame, frame_rate=30):
         self.tracked_stracks = []  # type: list[STrack]
         self.lost_stracks = []  # type: list[STrack]
         self.removed_stracks = []  # type: list[STrack]
-
+        self.frame = frame
         self.frame_id = 0
         self.args = args
         #self.det_thresh = args.track_thresh
@@ -328,3 +329,37 @@ def remove_duplicate_stracks(stracksa, stracksb):
     resa = [t for i, t in enumerate(stracksa) if not i in dupa]
     resb = [t for i, t in enumerate(stracksb) if not i in dupb]
     return resa, resb
+
+###----------------------edit-----------------------###
+#######################################################
+def crop_box(frame, box):
+  """
+  Crops a region from a frame in RGB format based on bounding box coordinates.
+
+  Args:
+      frame: A NumPy array representing the image frame (in BGR format).
+      box: A tuple containing the top-left and bottom-right coordinates of the bounding box (x_min, y_min, x_max, y_max).
+
+  Returns:
+      A NumPy array representing the cropped region in RGB format, or None if the box is invalid.
+  """
+  (x_min, y_min, x_max, y_max) = box
+
+  # Check for invalid box coordinates
+  if x_min >= x_max or y_min >= y_max:
+    return None
+
+  # Clamp coordinates to frame dimensions
+  x_min = int(max(0, x_min))
+  y_min = int(max(0, y_min))
+  x_max = int(min(frame.shape[1], x_max))
+  y_max = int(min(frame.shape[0], y_max))
+
+  # Convert to RGB format
+  frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+  # Crop the frame in RGB
+  cropped_region = frame_rgb[y_min:y_max, x_min:x_max]
+  return cropped_region
+#######################################################
+###----------------------edit-----------------------###
