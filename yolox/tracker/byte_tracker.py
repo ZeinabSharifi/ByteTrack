@@ -150,10 +150,17 @@ class STrack(BaseTrack):
 
 
 class BYTETracker(object):
-    def __init__(self, args, feature_extractor, global_stracks=[], frame_rate=30):###<----- added feature_extractor & global_stracks attribute to constructor
+    def __init__(self, args, feature_extractor, global_stracks:List[STrack]=[], frame_rate=30):###<----- added feature_extractor & global_stracks attribute to constructor
         self.tracked_stracks = []  # type: list[STrack]
         self.lost_stracks = []  # type: list[STrack]
-        self.removed_stracks = global_stracks  # type: list[STrack]
+
+        ###-------------------edit-----------------------------###
+        self.global_stracks = global_stracks
+        self.removed_stracks = [STrack(track._tlwh, track.score) for track in global_stracks]  # type: list[STrack]
+        for r_track,g_track in zip(self.removed_stracks,global_stracks):
+            r_track.track_id = g_track.track_id
+            r_track.feature = g_track.feature
+        ###-------------------edit-----------------------------###
         self.frame_id = 0
         self.args = args
         #self.det_thresh = args.track_thresh
