@@ -283,7 +283,7 @@ class BYTETracker(object):
         crops = [crop_box(box=box, frame=frame) for box in boxes]
         detected_features = self.extractor(crops)
 
-        high_removed_stracks = [track for track in self.removed_stracks if (track.score>0.7 and not track.is_activated)]
+        high_removed_stracks = [track for track in self.removed_stracks if track.score>0.7]
         removed_features = [track.feature for track in high_removed_stracks]
         similarity_matrix = compare_features(removed_features,detected_features)
         matched, u_removed, u_detection = filter_matches(similarity_matrix=similarity_matrix)
@@ -322,6 +322,7 @@ class BYTETracker(object):
         self.lost_stracks.extend(lost_stracks)
         self.lost_stracks = sub_stracks(self.lost_stracks, self.removed_stracks)
         self.removed_stracks.extend(removed_stracks)
+        self.removed_stracks = sub_stracks(self.removed_stracks,self.tracked_stracks)
         self.tracked_stracks, self.lost_stracks = remove_duplicate_stracks(self.tracked_stracks, self.lost_stracks)
         # get scores of lost tracks
         output_stracks = [track for track in self.tracked_stracks if track.is_activated]
