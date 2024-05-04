@@ -156,7 +156,7 @@ class BYTETracker(object):
 
         ###-------------------edit-----------------------------###
         self.global_stracks = global_stracks
-        self.removed_stracks = [STrack(track._tlwh, track.score) for track in global_stracks]  # type: list[STrack]
+        self.removed_stracks = [STrack(track.tlwh, track.score) for track in global_stracks]  # type: list[STrack]
         for r_track,g_track in zip(self.removed_stracks,global_stracks):
             r_track.track_id = g_track.track_id
             r_track.feature = g_track.feature
@@ -297,12 +297,14 @@ class BYTETracker(object):
         ###------------------------------edit------------------------------_###
         """ Step 4: Init new stracks"""
         for inew in u_detection:
+            print("HI")
             track = detections[inew]
             feature = detected_features[inew]  ###<----- edit
             if track.score < self.det_thresh:
                 continue
             track.activate(self.kalman_filter, self.frame_id, feature) ###<----- passed in feature as well
             activated_starcks.append(track)
+            self.global_stracks.append(track)
         """ Step 5: Update state"""
         for track in self.lost_stracks:
             if self.frame_id - track.end_frame > self.max_time_lost:
