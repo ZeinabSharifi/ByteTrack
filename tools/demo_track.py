@@ -27,8 +27,8 @@ def make_parser():
     parser.add_argument("-n", "--name", type=str, default=None, help="model name")
 
     parser.add_argument(
-        #"--path", default="./datasets/mot/train/MOT17-05-FRCNN/img1", help="path to images or video"
-        "--path", default="./videos/palace.mp4", help="path to images or video"
+        "--path", default="/content/drive/MyDrive/MOT17/train/MOT17-09-FRCNN/img1", help="path to images or video"
+        #"--path", default="./videos/palace.mp4", help="path to images or video"
     )
     parser.add_argument("--camid", type=int, default=0, help="webcam demo camera id")
     parser.add_argument(
@@ -188,25 +188,28 @@ def image_demo(predictor, vis_folder, current_time, args):
     for frame_id, img_path in enumerate(files, 1):
         outputs, img_info = predictor.inference(img_path, timer)
         if outputs[0] is not None:
-            online_targets = tracker.update(outputs[0], [img_info['height'], img_info['width']], exp.test_size)
+            #online_targets = tracker.update(outputs[0], [img_info['height'], img_info['width']], exp.test_size)
+            out = outputs[0]
+            if out.shape[1] == 5:
+                scores = out[:, 4]
+                bboxes = out[:, :4]
+            else:
+                out = out.cpu().numpy()
+                out[:, 4] = out[:, 4] * out[:, 5]
+                bboxes = out[:, :4]  # x1y1x2y2
             online_tlwhs = []
             online_ids = []
             online_scores = []
-            for t in online_targets:
-                tlwh = t.tlwh
-                tid = t.track_id
-                vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
-                if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
-                    online_tlwhs.append(tlwh)
-                    online_ids.append(tid)
-                    online_scores.append(t.score)
-                    # save results
-                    results.append(
-                        f"{frame_id},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
-                    )
+            #img_h, img_w = img_info[0], img_info[1]
+            scale = min(exp.test_size[0] / float(img_info['height']), exp.test_size[1] / float(img_info['width']))
+            bboxes /= scale
+            for x1,y1,x2,y2,v in (out[:,:5]):
+                results.append(
+                    f"{frame_id},{x1:.2f},{y1:.2f},{x2-x1:.2f},{y2-y1:.2f},{v:.2f}\n"
+                )
             timer.toc()
             online_im = plot_tracking(
-                img_info['raw_img'], online_tlwhs, online_ids, frame_id=frame_id, fps=1. / timer.average_time
+                img_info['raw_img'], online_tlwhs, online_ids, frame_id=frame_id + 1, fps=1. / timer.average_time
             )
         else:
             timer.toc()
@@ -260,21 +263,25 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
         if ret_val:
             outputs, img_info = predictor.inference(frame, timer)
             if outputs[0] is not None:
-                online_targets = tracker.update(outputs[0], [img_info['height'], img_info['width']], exp.test_size)
+                #online_targets = tracker.update(outputs[0], [img_info['height'], img_info['width']], exp.test_size)
+                out = outputs[0]
+                if out.shape[1] == 5:
+                    scores = out[:, 4]
+                    bboxes = out[:, :4]
+                else:
+                    out = out.cpu().numpy()
+                    out[:, 4] = out[:, 4] * out[:, 5]
+                    bboxes = out[:, :4]  # x1y1x2y2
                 online_tlwhs = []
                 online_ids = []
                 online_scores = []
-                for t in online_targets:
-                    tlwh = t.tlwh
-                    tid = t.track_id
-                    vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
-                    if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
-                        online_tlwhs.append(tlwh)
-                        online_ids.append(tid)
-                        online_scores.append(t.score)
-                        results.append(
-                            f"{frame_id},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
-                        )
+                #img_h, img_w = img_info[0], img_info[1]
+                scale = min(exp.test_size[0] / float(img_info['height']), exp.test_size[1] / float(img_info['width']))
+                bboxes /= scale
+                for x1,y1,x2,y2,v in (out[:,:5]):
+                    results.append(
+                        f"{frame_id},{x1:.2f},{y1:.2f},{x2-x1:.2f},{y2-y1:.2f},{v:.2f}\n"
+                    )
                 timer.toc()
                 online_im = plot_tracking(
                     img_info['raw_img'], online_tlwhs, online_ids, frame_id=frame_id + 1, fps=1. / timer.average_time
