@@ -103,8 +103,8 @@ if __name__ == '__main__':
                     cat_id = int(anns[i][7])
                     ann_cnt += 1
                     if not ('15' in DATA_PATH):
-                        #if not (float(anns[i][8]) >= 0.25):  # visibility.
-                            #continue
+                        if not (float(anns[i][8]) >= 0.05):  # visibility.
+                            continue
                         if not (int(anns[i][6]) == 1):  # whether ignore.
                             continue
                         if int(anns[i][7]) in [3, 4, 5, 6, 9, 10, 11]:  # Non-person
